@@ -1,0 +1,18 @@
+﻿[Unit]
+Description=Port Guard UI
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+EnvironmentFile=/etc/port-guard-ui.env
+WorkingDirectory=/opt/port-guard-ui
+ExecStart=/usr/bin/python3 /opt/port-guard-ui/server.py
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=false
+
+[Install]
+WantedBy=multi-user.target

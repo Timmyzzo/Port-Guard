@@ -1,0 +1,57 @@
+{
+  "schema": 1,
+  "cn_set": "cnblock",
+  "persist": true,
+  "drop_cn_fallback": false,
+  "block_cn_all_ports": false,
+  "source_groups": [
+    {
+      "id": "internal",
+      "name": "内网 IP",
+      "protected": true,
+      "sources": ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+    },
+    {
+      "id": "personal",
+      "name": "个人 IP",
+      "protected": false,
+      "sources": ["203.0.113.10/32"]
+    },
+    {
+      "id": "trusted",
+      "name": "可信来源",
+      "protected": false,
+      "sources": []
+    }
+  ],
+  "rules": [
+    {
+      "id": "web-80-443",
+      "name": "Public Web",
+      "enabled": true,
+      "scope": "both",
+      "protocols": ["tcp"],
+      "ports": [80, 443],
+      "docker_ports": [80, 443],
+      "mode": "open",
+      "source_groups": ["internal"],
+      "blacklist_enabled": false,
+      "blacklist_groups": [],
+      "note": "Public HTTP/HTTPS example."
+    },
+    {
+      "id": "ssh-22222",
+      "name": "SSH",
+      "enabled": false,
+      "scope": "input",
+      "protocols": ["tcp"],
+      "ports": [22222],
+      "docker_ports": [],
+      "mode": "whitelist",
+      "source_groups": ["internal", "personal"],
+      "blacklist_enabled": false,
+      "blacklist_groups": [],
+      "note": "Disabled sample. Verify access before enabling SSH restrictions."
+    }
+  ]
+}
