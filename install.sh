@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BASE_URL="${PORT_GUARD_BASE_URL:-https://raw.githubusercontent.com/Timmyzzo/port-guard-ui/refs/heads/main}"
+BASE_URL="${PORT_GUARD_BASE_URL:-https://raw.githubusercontent.com/Timmyzzo/Port-Guard/refs/heads/main}"
 APP_DIR="/opt/port-guard-ui"
 CONFIG_DIR="/etc/port-guard-ui"
 BACKUP_DIR="/var/backups/port-guard-ui"

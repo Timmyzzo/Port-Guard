@@ -81,7 +81,7 @@ admin
 已经 SSH 进入服务器后，直接执行：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Timmyzzo/port-guard-ui/refs/heads/main/install.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/Timmyzzo/Port-Guard/refs/heads/main/install.sh | sudo bash
 ```
 
 安装脚本只考虑 Debian / Ubuntu 系统，会自动完成：
@@ -108,7 +108,7 @@ http://服务器IP:8787
 已经安装过旧版本时，仍然执行同一行命令即可：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Timmyzzo/port-guard-ui/refs/heads/main/install.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/Timmyzzo/Port-Guard/refs/heads/main/install.sh | sudo bash
 ```
 
 升级会覆盖程序文件并重启服务，但不会删除已有配置：
