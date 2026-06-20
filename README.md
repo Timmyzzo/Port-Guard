@@ -11,7 +11,7 @@
 
 一个轻量、直观、开箱即用的服务器端口管理面板。扫描当前端口，托管访问策略，减少手写 iptables 规则的重复劳动。
 
-[友情链接：LINUX DO](https://linux.do/)    [友情链接：nodeseek](https://www.nodeseek.com/)
+[友情链接：LINUX DO](https://linux.do/) · [NodeSeek](https://www.nodeseek.com/)
 
 </div>
 
@@ -276,11 +276,11 @@ sudo iptables-restore < /var/backups/port-guard-ui/iptables-YYYYMMDDTHHMMSSZ.rul
 
 ## 开源推广声明
 
-本项目参与 [LINUX DO](https://linux.do/) 开源推广，项目主页已添加 LINUX DO 友链。
+本项目参与 [LINUX DO](https://linux.do/) 开源推广，项目主页已添加 LINUX DO 和 [NodeSeek](https://www.nodeseek.com/) 友链。
 
 - [x] 项目代码公开可访问。
 - [x] README 已提供安装方式、功能说明和界面截图。
-- [x] README 已添加 [LINUX DO](https://linux.do/) 友链。
+- [x] README 已添加 [LINUX DO](https://linux.do/) 和 [NodeSeek](https://www.nodeseek.com/) 友链。
 - [x] 欢迎社区用户提交 Issue、反馈建议和改进 PR。
 
 ---
