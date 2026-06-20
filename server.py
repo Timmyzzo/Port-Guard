@@ -26,6 +26,7 @@ TOKEN = os.environ.get("PORT_GUARD_TOKEN", "")
 SECRET = os.environ.get("PORT_GUARD_SECRET", TOKEN or "dev-secret")
 BIND = os.environ.get("PORT_GUARD_BIND", "127.0.0.1")
 PORT = int(os.environ.get("PORT_GUARD_PORT", "8787"))
+INIT_OPEN_LISTENING = os.environ.get("PORT_GUARD_INIT_OPEN_LISTENING", "0").strip().lower() in {"1", "true", "yes", "on"}
 
 CHAIN_INPUT = "PORTGUARD-INPUT"
 CHAIN_DOCKER = "PORTGUARD-DOCKER"
@@ -95,7 +96,11 @@ def ensure_dirs():
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     BACKUP_DIR.mkdir(parents=True, exist_ok=True)
     if not CONFIG_FILE.exists():
-        write_json(CONFIG_FILE, DEFAULT_CONFIG)
+        config = initial_open_listening_config() if INIT_OPEN_LISTENING else DEFAULT_CONFIG
+        if INIT_OPEN_LISTENING:
+            apply_firewall(config, create_backup=False)
+        else:
+            write_json(CONFIG_FILE, config)
 
 
 def read_json(path, default=None):
@@ -475,6 +480,45 @@ def clear_all_restrictions(config):
     return config
 
 
+def initial_open_listening_config():
+    config = json.loads(json.dumps(DEFAULT_CONFIG))
+    ports = {}
+
+    def add_port(port, proto, docker=False):
+        if not port or proto not in PROTOCOLS:
+            return
+        item = ports.setdefault(int(port), {"protocols": set(), "docker": False})
+        item["protocols"].add(proto)
+        item["docker"] = item["docker"] or docker
+
+    for row in ss_ports():
+        proto = "udp" if str(row.get("proto", "")).startswith("udp") else "tcp"
+        add_port(row.get("port"), proto)
+
+    for row in docker_port_mappings():
+        add_port(row.get("host_port"), row.get("proto"), docker=True)
+
+    rules = []
+    for port in sorted(ports):
+        item = ports[port]
+        rules.append({
+            "id": f"auto-open-{port}",
+            "name": f"监听端口 {port}",
+            "enabled": True,
+            "scope": "both" if item["docker"] else "input",
+            "protocols": sorted(item["protocols"]),
+            "ports": [port],
+            "docker_ports": [port] if item["docker"] else [],
+            "mode": "open",
+            "source_groups": [REQUIRED_GROUP_ID],
+            "blacklist_enabled": False,
+            "blacklist_groups": [],
+            "note": "首次安装自动开放当前监听端口。",
+        })
+    config["rules"] = rules
+    return config
+
+
 def chain_exists(chain):
     return run(["iptables", "-S", chain], check=False)[0] == 0
 
@@ -654,10 +698,10 @@ def apply_ipv6_firewall(config, plan, execute):
         build_ipv6_chain(CHAIN_DOCKER, config, docker=True, plan=plan, execute=execute)
 
 
-def apply_firewall(config):
+def apply_firewall(config, create_backup=True):
     config = validate_config(config)
     ensure_temporary_open_all()
-    backup = backup_iptables()
+    backup = backup_iptables() if create_backup else None
     plan = []
     try:
         ensure_ipset(config["cn_set"])
@@ -674,13 +718,16 @@ def apply_firewall(config):
         if config["persist"] and shutil.which("netfilter-persistent"):
             run(["netfilter-persistent", "save"])
     except Exception:
-        try:
-            run(["iptables-restore"], input_data=backup.read_bytes(), check=False)
-            ensure_temporary_open_all()
-        finally:
-            raise
+        if backup is not None:
+            try:
+                run(["iptables-restore"], input_data=backup.read_bytes(), check=False)
+                ensure_temporary_open_all()
+            finally:
+                raise
+        remove_temporary_open_all()
+        raise
     write_json(CONFIG_FILE, config)
-    return {"backup": backup.name, "commands": plan}
+    return {"backup": backup.name if backup else None, "commands": plan}
 
 
 def preview_firewall(config):
@@ -953,11 +1000,11 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main():
-    ensure_dirs()
     if os.geteuid() != 0:
         raise SystemExit("port-guard-ui must run as root to manage iptables")
     if not TOKEN and not is_loopback_bind(BIND):
         raise SystemExit("PORT_GUARD_TOKEN is required when binding outside loopback")
+    ensure_dirs()
     httpd = ThreadingHTTPServer((BIND, PORT), Handler)
     print(f"Port Guard UI listening on http://{BIND}:{PORT}")
     httpd.serve_forever()
